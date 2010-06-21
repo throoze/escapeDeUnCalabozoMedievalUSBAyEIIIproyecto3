@@ -78,30 +78,6 @@ public class Main {
         // Se verifica que el archivo este en condiciones de ser procesado
         if (file.exists() && file.isFile() && file.canRead())  {
 
-            /* Si el archivo no es del formato nombreArchivo.input, lanza la
-             * excepcion. Para verificar esto, analizamos la cadena inFile:
-             */
-            if (!this.inputFile.substring(this.inputFile.length() - 6).
-                    equals(".input"))
-            {
-                throw new ExcepcionFormatoIncorrecto("Problema de formato en el"
-                        + " nombre del archivo:\nSe esperaba un archivo con la "
-                        + "extensión \".input\" y se encontró:\n\n\t\"" +
-                        this.inputFile + "\"\n\n");
-            }
-
-            /* Si el archivo no es del formato nombreArchivo.output, lanza la
-             * excepcion. Para verificar esto, analizamos la cadena outFile:
-             */
-            if (!this.outputFile.substring(this.outputFile.length() - 7).
-                    equals(".output"))
-            {
-                throw new ExcepcionFormatoIncorrecto("Problema de formato en el"
-                        + " nombre del archivo:\nSe esperaba un archivo con la "
-                        + "extensión \".output\" y se encontró:\n\n\t\"" +
-                        this.outputFile + "\"\n\n");
-            }
-
             // Se inicializan la entrada y la salida del programa
             try {
                 in = new BufferedReader(new FileReader(this.inputFile));
@@ -278,13 +254,6 @@ public class Main {
                             }
                         }
                         // Se revisan los niveles anterior y siguiente
-                        if (this.maze[i][j][k] == 14) {
-                            System.out.println("i vale: " + i);
-                            System.out.println("j vale: " + j);
-                            System.out.println("k vale: " + k);
-                            System.out.println("this.maze[i][j][k] == " + this.maze[i][j][k]);
-                            System.out.println("this.maze[i][j][k+1] == " + this.maze[i][j][k+1]);
-                        }
                         if (0 < k) {
                             if (this.maze[i][j][k-1] != -1) {
                                 this.digrafo.addArc
@@ -308,8 +277,18 @@ public class Main {
     }
 
     /**
-     *
-     * @return
+     * Realiza la búsqueda de un camino mínimo entre {@code this.start} y
+     * {@code this.end} utilizando el algoritmo de búsqueda en amplitud.
+     * <b>Pre</b>: Debe haberse inicializado {@code this.digrafo} por medio del
+     * método {@code newDiGraph()}. Asimismo, deben estar inicializados
+     * correctamente {@code this.start}, {@code this.end} y
+     * {@code this.numNodes}.
+     * <b>Post</b>: Se construye el camino mínimo entre {@code this.start} y
+     * {@code this.end} en el DiGraph {@code this.digrafo} y se devuelve
+     * representado en un String.
+     * @return String que contiene el camino entre{@code this.start} y
+     * {@code this.end}, o la cadena vacía, en caso de que no exista dicho
+     * camino.
      */
     public String bfs() {
         Queue<Integer> nodos = new Cola();
@@ -357,6 +336,18 @@ public class Main {
         return "";
     }
 
+    /**
+     * Analiza el camino construido por el método {@code bfs}, devolviendo el
+     * String {@code Atrapado!} en caso de que camino sea la cadena vacia, y
+     * {@code Escape en <i>n</i> minuto(s).}, donde <i>n</i> es el número de
+     * pasos en el camino representado por el argumento {@code camino}.
+     * <b>Pre</b>: {@code camino} debe haber sido construido por el método
+     * {@code bfs()}.
+     * <b>Post</b>: Se escribe en la salida {@code this.out} la linea
+     * correspondiente, según lo mencionado anteriormente.
+     * @param camino String a ser analizado. Representa el camino entre
+     * {@code this.start} y {@code this.end}.
+     */
     public void write (String camino) {
         if (camino.equals("")) {
             this.out.println("Atrapado!");
@@ -367,11 +358,17 @@ public class Main {
     }
 
     /**
+     * Método principal, encargado de llamar al resto de los métodos para
+     * resolver el laberinto.
+     * <b>Pre</b>: La llamada al programa debe hacerse con la sintaxis
+     * especificada en el enunciado del proyecto.
+     * <b>Post</b>: Se resuelve el laberinto en caso de tener solución, y en
+     * caso contrario, se escribe en el archivo de salida, la palabra Atrapado!
+     * 
      * @param args argumentos introducidos por linea de comandos. Contiene el
      * nombre del archivo de entrada y del archivo de salida
      */
     public static void main(String[] args) throws IOException {
-
         Main main = null;
         if (args.length == 2) {
             main = new Main(args[0], args[1]);
@@ -382,45 +379,8 @@ public class Main {
                     "archivo_entrada.input archivo_salida.output\n\n");
         }
 
-        for (int k = 0; k < main.l; k++) {
-            for (int i = 0; i < main.r; i++) {
-                for (int j = 0; j < main.c; j++) {
-                    System.out.print(main.maze[i][j][k] + ", ");
-                }
-                System.out.print("\n");
-            }
-            System.out.println("\n");
-        }
-
-        System.out.println("El nodo de inicio del laberinto es el nodo: " + main.start);
-        System.out.println("El nodo de llegada del laberinto es el nodo: " + main.end);
-        System.out.println("El número de nodos es: " + main.numNodes);
-
         main.newDiGraph();
-        System.out.println("El digrafo llenado es:\n\n" + main.digrafo.toString());
-
         String camino = main.bfs();
-
-        System.out.println("El camino es: "+ camino);
-
-        String[] nodos = camino.split(",");
-
-        System.out.println("Escape en " + (nodos.length-1) + " minuto(s).");
-
-
-
-        
-
-
-        /*
-        for (int k = 0; k < a.length; k++) {
-            System.out.print(a[k]);
-        }
-        System.out.print("\n");
-
-
-        DiGraph digrafo = main.llenarDigrafo();
-         * 
-         */
+        main.write(camino);
     }
 }
