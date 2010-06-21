@@ -17,11 +17,12 @@ public class Main {
 
     private String  outputFile;     // Nombre del archivo de salida.
 
-    boolean[][][]   maze;           // Representacion del laberinto como matriz
-                                    // booleana.
-
-    int [][][]      nodes;          // Representacion de los nodos relacionándo-
-                                    // los con los índices de this.maze
+    int [][][]      nodes;          // Representacion del laberinto, en base a
+                                    // los nodos, tal que si nodes[i][j][k] < 0
+                                    // se representa un bloque, y en caso
+                                    // contrario, se representa un camino libre,
+                                    // el cual será a  su vez representado en el
+                                    // DiGraph con el numero nodes[i][j][k].
 
     BufferedReader  in;             // Buffer de entrada (Lectura)
     PrintStream     out;            // Flujo de salida (Escritura)
@@ -31,6 +32,11 @@ public class Main {
     int             c;              // No de columnas
     int             s;              // Nodo de partida (Start)
     int             e;              // Nodo de llegada (End)
+    int             numNodes;       // Numero de nodos a introducir en el
+                                    // DiGraph.
+
+    DiGraph         digrafo;        // Digrafo donde se representará el
+                                    // laberinto.
 
 
     /**
@@ -39,7 +45,6 @@ public class Main {
     public Main() {
         this.inputFile = "";
         this.outputFile = "";
-        this.maze = new boolean[0][0][0];
         this.nodes = new int[0][0][0];
         this.in = null;
         this.out = null;
@@ -52,11 +57,13 @@ public class Main {
 
     /**
      *
-     * @param name
+     * @param inFile
+     * @param outFile
      * @throws IOException
      */
-    public Main(String name) throws IOException {
-        this.inputFile = name;
+    public Main(String inFile, String outFile) throws IOException {
+        this.inputFile = inFile;
+        this.outputFile = outFile;
 
         // Se crea un objeto de tipo archivo para hacer el código más legible
         File file =  new File(this.inputFile);
@@ -65,18 +72,27 @@ public class Main {
         if (file.exists() && file.isFile() && file.canRead())  {
 
             /* Si el archivo no es del formato nombreArchivo.input, lanza la
-             * excepcion. Para verificar esto, analizamos la cadena de entrada:
+             * excepcion. Para verificar esto, analizamos la cadena inFile:
              */
-            if (this.inputFile.substring(this.inputFile.length() - 5).
-                    equals("input"))
+            if (!this.inputFile.substring(this.inputFile.length() - 6).
+                    equals(".input"))
             {
-                this.outputFile = this.inputFile.substring
-                                    (0, this.inputFile.length() - 5) + "output";
-            } else {
                 throw new ExcepcionFormatoIncorrecto("Problema de formato en el"
                         + " nombre del archivo:\nSe esperaba un archivo con la "
                         + "extensión \".input\" y se encontró:\n\n\t\"" +
                         this.inputFile + "\"\n\n");
+            }
+
+            /* Si el archivo no es del formato nombreArchivo.output, lanza la
+             * excepcion. Para verificar esto, analizamos la cadena outFile:
+             */
+            if (!this.outputFile.substring(this.outputFile.length() - 7).
+                    equals(".output"))
+            {
+                throw new ExcepcionFormatoIncorrecto("Problema de formato en el"
+                        + " nombre del archivo:\nSe esperaba un archivo con la "
+                        + "extensión \".output\" y se encontró:\n\n\t\"" +
+                        this.outputFile + "\"\n\n");
             }
 
             // Se inicializan la entrada y la salida del programa
@@ -105,8 +121,7 @@ public class Main {
             this.c = Integer.parseInt(tokens[2]);
 
             // Se inicializan el resto de las estructuras:
-            this.maze = new boolean[this.l][this.r][this.c];
-            this.nodes = new int[this.l][this.r][this.c];
+            this.nodes = new int[this.r][this.c][this.l];
             // Listo!!!
         } else if (!file.exists()) {
             throw new ExcepcionArchivoNoExiste("Problema al leer el archivo " +
@@ -122,30 +137,60 @@ public class Main {
     }
     
     /**
-     * 
-     * @param i
-     * @param j
-     * @param k
-     * @return
-     */
-    public int rclToNode(int i, int j, int k) {
-        return ((k*this.r*this.c) + (j*this.r) + (i));
-    }
-
-    //ESTO NO ESTA BIEN!!!! ACOMODAR Y PENSAR MEJOR LAS COSAS
-    /**
      *
      */
-    public void procesarArchivo(){
-        int counter = 0;
+    public void leerLaberinto() throws IOException{
+        int nLines = (this.l * this.r) + (this.l);
+        int lineCounter = 1;
+        int nNodes = 0;
+        String line = "";
         for (int k = 0; k < this.l; k++) {
-            for (int j = 0; j < this.c; j++) {
-                for (int i = 0; i < this.r; i++) {
-                    this.maze[i][j][k] = false;
-                    this.nodes[i][j][k] = counter;
-                    counter++;
+            for (int i = 0; i < this.r; i++) {
+                try {
+                    line = in.readLine();
+                } catch (IOException ex) {
+                    throw new IOException("Problema leyendo la linea #"
+                            + lineCounter);
                 }
+                if (!line.equals("")) {
+                    String[] tokens = line.split("");
+                    if (tokens.length != (this.c + 1) && !line.equals("")) {
+                        throw new ExcepcionFormatoIncorrecto("\nProblema al " +
+                                "leer la linea " + lineCounter + ":\nSe " +
+                                "esperaban " + this.c + "elementos en esta " +
+                                "línea, y se encontraron " +
+                                (tokens.length - 1));
+                    }
+                    for (int j = 1; j < tokens.length; j++) {
+                        if (tokens[j].matches("[SE.#]")) {
+                            if (tokens[j].matches("[SE.]")) {
+                                if (tokens[j].equals("S")) {
+                                    this.s = nNodes;
+                                } else if (tokens[j].equals("E")) {
+                                    this.e = nNodes;
+                                }
+                                this.nodes[i][j - 1][k] = nNodes;
+                                this.numNodes = nNodes;
+                                nNodes++;
+                            } else {
+                                this.nodes[i][j - 1][k] = -1;
+                            }
+                        } else {
+                            throw new ExcepcionFormatoIncorrecto("\nProblema "
+                                    + "al leer la linea " + lineCounter + ".\n"
+                                    + "Se esperaba alguno de los símbolos "
+                                    + "[S,E,.,#], y se encontró: " + tokens[j]);
+                        }
+                    }
+                } else {
+                    i--;
+                }
+                lineCounter++;
             }
+        }
+        if (lineCounter != nLines) {
+            throw new ExcepcionFormatoIncorrecto("\nEl archivo contiene " +
+                    "un número de lineas distinto del especificado...");
         }
     }
 
@@ -153,24 +198,48 @@ public class Main {
      *
      * @return
      */
-    private DiGraph llenarDigrafo() {
-        return null;
+    private void llenarDigrafo() {
     }
 
     /**
      * @param args the command line arguments
      */
     public static void main(String[] args) throws IOException {
+
         Main main = null;
-        if (1 < args.length) {
-            main = new Main(args[0]);
+        if (args.length == 2) {
+            main = new Main(args[0], args[1]);
+            main.leerLaberinto();
         } else {
             throw new ExcepcionFormatoIncorrecto("Error de sintaxis en la " +
                     "llamada del programa.\n\nUSO:\n\n\tjava Main " +
-                    "archivo_entrada.input\n\n");
+                    "archivo_entrada.input archivo_salida.output\n\n");
         }
+
+        for (int k = 0; k < main.l; k++) {
+            for (int i = 0; i < main.r; i++) {
+                for (int j = 0; j < main.c; j++) {
+                    System.out.print(main.nodes[i][j][k] + ", ");
+                }
+                System.out.print("\n");
+            }
+            System.out.println("\n");
+        }
+
+        System.out.println("El nodo de inicio del laberinto es el nodo: " + main.s);
+        System.out.println("El nodo de llegada del laberinto es el nodo: " + main.e);
+        System.out.println("El número de nodos es: " + main.numNodes);
+
+
+        /*
+        for (int k = 0; k < a.length; k++) {
+            System.out.print(a[k]);
+        }
+        System.out.print("\n");
 
 
         DiGraph digrafo = main.llenarDigrafo();
+         * 
+         */
     }
 }
