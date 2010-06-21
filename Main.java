@@ -207,8 +207,14 @@ public class Main {
      * {@code this.readMaze}.
      */
     private void newDiGraph() {
-        this.digrafo = new DiGraphMatrix(this.numNodes);
-        //this.digrafo = new DiGraphList(this.numNodes);
+
+        /**
+         * Por cuestiones de eficiencia, utilizamos la implementación
+         * DiGraphList, de todos modos dejamos el otro constructor comentado,
+         * con el fin de tener la facilidad de cambiar la implementación.
+         */
+        //this.digrafo = new DiGraphMatrix(this.numNodes);
+        this.digrafo = new DiGraphList(this.numNodes);
 
         /* Se recorre todo el laberinto (this.maze) en busca de caminos libres
          * para enlazarlos por medio de arcos. Chequeando todos y cada uno de
