@@ -20,13 +20,6 @@ public class Main {
 
     private String  outputFile; // Nombre del archivo de salida.
 
-    int [][][]      maze;       // Representacion del laberinto, en base a los
-                                // nodos, tal que si (maze[i][j][k] < 0), se
-                                // representa un bloque, y en caso contrario, se
-                                // representa un camino libre; el cual será a su
-                                // vez representado en el DiGraph con el número
-                                // contenido en maze[i][j][k].
-
     BufferedReader  in;         // Buffer de entrada (Lectura)
     PrintStream     out;        // Flujo de salida (Escritura)
 
@@ -48,7 +41,6 @@ public class Main {
     public Main() {
         this.inputFile = "";
         this.outputFile = "";
-        this.maze = new int[0][0][0];
         this.in = null;
         this.out = null;
         this.l = -1;
@@ -104,9 +96,6 @@ public class Main {
             this.l = Integer.parseInt(tokens[0]);
             this.r = Integer.parseInt(tokens[1]);
             this.c = Integer.parseInt(tokens[2]);
-
-            // Se inicializan el resto de las estructuras:
-            this.maze = new int[this.r][this.c][this.l];
             // Listo!!!
         } else if (!file.exists()) {
             throw new ExcepcionArchivoNoExiste("Problema al leer el archivo " +
@@ -136,11 +125,14 @@ public class Main {
      * <b>Pre</b>: {@code this} debe haber sido inicializado con el constructor
      * no vacío, de manera de que haya un buffer de lectura abierto al momento
      * de correr éste método.
-     * <b>Post</b>: Se habrá llenado {@code this.maze} según lo descrito
+     * <b>Post</b>: Se habrá llenado {@code maze} según lo descrito
      * anteriormente, y se habrán salvado el número total de nodos, el nodo de
      * partida y el nodo de llegada.
+     *
+     * @return La matriz que representa el laberinto
      */
-    public void readMaze() throws IOException{
+    public int[][][] readMaze() throws IOException{
+        int[][][] maze = new int[this.r][this.c][this.l];
         int nLines = (this.l * this.r) + (this.l);
         int lineCounter = 1;
         int nNodes = 0;
@@ -170,11 +162,11 @@ public class Main {
                                 } else if (tokens[j].equals("E")) {
                                     this.end = nNodes;
                                 }
-                                this.maze[i][j - 1][k] = nNodes;
+                                maze[i][j - 1][k] = nNodes;
                                 nNodes++;
                                 this.numNodes = nNodes;
                             } else {
-                                this.maze[i][j - 1][k] = -1;
+                                maze[i][j - 1][k] = -1;
                             }
                         } else {
                             throw new ExcepcionFormatoIncorrecto("\nProblema "
@@ -193,6 +185,7 @@ public class Main {
             throw new ExcepcionFormatoIncorrecto("\nEl archivo contiene " +
                     "un número de lineas distinto del especificado...");
         }
+        return maze;
     }
 
     /**
@@ -208,7 +201,7 @@ public class Main {
      * de leer el archivo {@code this.inputFile} a travez del método
      * {@code this.readMaze}.
      */
-    private void newDiGraph() {
+    private void newDiGraph(int[][][] maze) {
 
         /**
          * Por cuestiones de eficiencia, utilizamos la implementación
@@ -226,55 +219,55 @@ public class Main {
         for (int k = 0; k < this.l; k++) {
             for (int i = 0; i< this.r; i++) {
                 for (int j = 0; j < this.c; j++) {
-                    if (this.maze[i][j][k] != -1) {
+                    if (maze[i][j][k] != -1) {
                         // Se revisan las columnas anterior y siguiente
                         if (0 < j) {
-                            if (this.maze[i][j-1][k] != -1) {
+                            if (maze[i][j-1][k] != -1) {
                                 this.digrafo.addArc
-                                           (this.maze[i][j][k],
-                                            this.maze[i][j-1][k],
+                                           (maze[i][j][k],
+                                            maze[i][j-1][k],
                                             1.0);
                             }
                         }
                         if (j < (this.c - 1)) {
-                            if (this.maze[i][j+1][k] != -1) {
+                            if (maze[i][j+1][k] != -1) {
                                 this.digrafo.addArc
-                                           (this.maze[i][j][k],
-                                            this.maze[i][j+1][k],
+                                           (maze[i][j][k],
+                                            maze[i][j+1][k],
                                             1.0);
                             }
                         }
                         // Se revisan las filas anterior y siguiente
                         if (0 < i) {
-                            if (this.maze[i-1][j][k] != -1) {
+                            if (maze[i-1][j][k] != -1) {
                                 this.digrafo.addArc
-                                           (this.maze[i][j][k],
-                                            this.maze[i-1][j][k],
+                                           (maze[i][j][k],
+                                            maze[i-1][j][k],
                                             1.0);
                             }
                         }
                         if (i < (this.r - 1)) {
-                            if (this.maze[i+1][j][k] != -1) {
+                            if (maze[i+1][j][k] != -1) {
                                 this.digrafo.addArc
-                                           (this.maze[i][j][k],
-                                            this.maze[i+1][j][k],
+                                           (maze[i][j][k],
+                                            maze[i+1][j][k],
                                             1.0);
                             }
                         }
                         // Se revisan los niveles anterior y siguiente
                         if (0 < k) {
-                            if (this.maze[i][j][k-1] != -1) {
+                            if (maze[i][j][k-1] != -1) {
                                 this.digrafo.addArc
-                                           (this.maze[i][j][k],
-                                            this.maze[i][j][k-1],
+                                           (maze[i][j][k],
+                                            maze[i][j][k-1],
                                             1.0);
                             }
                         }
                         if (k < (this.l - 1)) {
-                            if (this.maze[i][j][k+1] != -1) {
+                            if (maze[i][j][k+1] != -1) {
                                 this.digrafo.addArc
-                                           (this.maze[i][j][k],
-                                            this.maze[i][j][k+1],
+                                           (maze[i][j][k],
+                                            maze[i][j][k+1],
                                             1.0);
                             }
                         }
@@ -377,17 +370,27 @@ public class Main {
      * nombre del archivo de entrada y del archivo de salida
      */
     public static void main(String[] args) throws IOException {
+
+        int [][][]      maze;   // Representacion del laberinto, en base a los
+                                // nodos, tal que si (maze[i][j][k] < 0), se
+                                // representa un bloque, y en caso contrario, se
+                                // representa un camino libre; el cual será a su
+                                // vez representado en el DiGraph con el número
+                                // contenido en maze[i][j][k].
+                                // No se añade al modelo de representación, para
+                                // ahorrar memoria.
+
         Main main = null;
         if (args.length == 2) {
             main = new Main(args[0], args[1]);
-            main.readMaze();
+            maze = main.readMaze();
         } else {
             throw new ExcepcionFormatoIncorrecto("Error de sintaxis en la " +
                     "llamada del programa.\n\nUSO:\n\n\tjava Main " +
                     "archivo_entrada.input archivo_salida.output\n\n");
         }
 
-        main.newDiGraph();
+        main.newDiGraph(maze);
         String camino = main.bfs();
         main.write(camino);
     }
