@@ -13,30 +13,28 @@ public class Main {
 
     // MODELO DE REPRESENTACIÓN:
 
-    private String  inputFile;      // Nombre del archivo de entrada.
+    private String  inputFile;  // Nombre del archivo de entrada.
 
-    private String  outputFile;     // Nombre del archivo de salida.
+    private String  outputFile; // Nombre del archivo de salida.
 
-    int [][][]      nodes;          // Representacion del laberinto, en base a
-                                    // los nodos, tal que si nodes[i][j][k] < 0
-                                    // se representa un bloque, y en caso
-                                    // contrario, se representa un camino libre,
-                                    // el cual será a  su vez representado en el
-                                    // DiGraph con el numero nodes[i][j][k].
+    int [][][]      maze;       // Representacion del laberinto, en base a los
+                                // nodos, tal que si (maze[i][j][k] < 0), se
+                                // representa un bloque, y en caso contrario, se
+                                // representa un camino libre; el cual será a su
+                                // vez representado en el DiGraph con el número
+                                // contenido en maze[i][j][k].
 
-    BufferedReader  in;             // Buffer de entrada (Lectura)
-    PrintStream     out;            // Flujo de salida (Escritura)
+    BufferedReader  in;         // Buffer de entrada (Lectura)
+    PrintStream     out;        // Flujo de salida (Escritura)
 
-    int             l;              // No de niveles
-    int             r;              // No de filas
-    int             c;              // No de columnas
-    int             s;              // Nodo de partida (Start)
-    int             e;              // Nodo de llegada (End)
-    int             numNodes;       // Numero de nodos a introducir en el
-                                    // DiGraph.
+    int             l;          // No de niveles
+    int             r;          // No de filas
+    int             c;          // No de columnas
+    int             s;          // Nodo de partida (Start)
+    int             e;          // Nodo de llegada (End)
+    int             numNodes;   // Número de nodos a introducir en el DiGraph.
 
-    DiGraph         digrafo;        // Digrafo donde se representará el
-                                    // laberinto.
+    DiGraph         digrafo;    // Digrafo donde se representará el laberinto.
 
 
     /**
@@ -45,7 +43,7 @@ public class Main {
     public Main() {
         this.inputFile = "";
         this.outputFile = "";
-        this.nodes = new int[0][0][0];
+        this.maze = new int[0][0][0];
         this.in = null;
         this.out = null;
         this.l = -1;
@@ -121,7 +119,7 @@ public class Main {
             this.c = Integer.parseInt(tokens[2]);
 
             // Se inicializan el resto de las estructuras:
-            this.nodes = new int[this.r][this.c][this.l];
+            this.maze = new int[this.r][this.c][this.l];
             // Listo!!!
         } else if (!file.exists()) {
             throw new ExcepcionArchivoNoExiste("Problema al leer el archivo " +
@@ -169,11 +167,11 @@ public class Main {
                                 } else if (tokens[j].equals("E")) {
                                     this.e = nNodes;
                                 }
-                                this.nodes[i][j - 1][k] = nNodes;
-                                this.numNodes = nNodes;
+                                this.maze[i][j - 1][k] = nNodes;
                                 nNodes++;
+                                this.numNodes = nNodes;
                             } else {
-                                this.nodes[i][j - 1][k] = -1;
+                                this.maze[i][j - 1][k] = -1;
                             }
                         } else {
                             throw new ExcepcionFormatoIncorrecto("\nProblema "
@@ -199,6 +197,80 @@ public class Main {
      * @return
      */
     private void llenarDigrafo() {
+        this.digrafo = new DiGraphMatrix(this.numNodes);
+        //this.digrafo = new DiGraphList(this.numNodes);
+
+        /* Se recorre todo el laberinto (this.maze) en busca de caminos libres
+         * para enlazarlos por medio de arcos. Chequeando todos y cada uno de
+         * los nodos, nos aseguramos de que hayan arcos de ida y de vuelta en
+         * los nodos que lo requieran.
+         */
+        for (int k = 0; k < this.l; k++) {
+            for (int i = 0; i< this.r; i++) {
+                for (int j = 0; j < this.c; j++) {
+                    if (this.maze[i][j][k] != -1) {
+                        // Se revisan las columnas anterior y siguiente
+                        if (0 < j) {
+                            if (this.maze[i][j-1][k] != -1) {
+                                this.digrafo.addArc
+                                           (this.maze[i][j][k],
+                                            this.maze[i][j-1][k],
+                                            1.0);
+                            }
+                        }
+                        if (j < (this.c - 1)) {
+                            if (this.maze[i][j+1][k] != -1) {
+                                this.digrafo.addArc
+                                           (this.maze[i][j][k],
+                                            this.maze[i][j+1][k],
+                                            1.0);
+                            }
+                        }
+                        // Se revisan las filas anterior y siguiente
+                        if (0 < i) {
+                            if (this.maze[i-1][j][k] != -1) {
+                                this.digrafo.addArc
+                                           (this.maze[i][j][k],
+                                            this.maze[i-1][j][k],
+                                            1.0);
+                            }
+                        }
+                        if (i < (this.r - 1)) {
+                            if (this.maze[i+1][j][k] != -1) {
+                                this.digrafo.addArc
+                                           (this.maze[i][j][k],
+                                            this.maze[i+1][j][k],
+                                            1.0);
+                            }
+                        }
+                        // Se revisan los niveles anterior y siguiente
+                        if (this.maze[i][j][k] == 14) {
+                            System.out.println("i vale: " + i);
+                            System.out.println("j vale: " + j);
+                            System.out.println("k vale: " + k);
+                            System.out.println("this.maze[i][j][k] == " + this.maze[i][j][k]);
+                            System.out.println("this.maze[i][j][k+1] == " + this.maze[i][j][k+1]);
+                        }
+                        if (0 < k) {
+                            if (this.maze[i][j][k-1] != -1) {
+                                this.digrafo.addArc
+                                           (this.maze[i][j][k],
+                                            this.maze[i][j][k-1],
+                                            1.0);
+                            }
+                        }
+                        if (k < (this.l - 1)) {
+                            if (this.maze[i][j][k+1] != -1) {
+                                this.digrafo.addArc
+                                           (this.maze[i][j][k],
+                                            this.maze[i][j][k+1],
+                                            1.0);
+                            }
+                        }
+                    }
+                }
+            }
+        }
     }
 
     /**
@@ -219,7 +291,7 @@ public class Main {
         for (int k = 0; k < main.l; k++) {
             for (int i = 0; i < main.r; i++) {
                 for (int j = 0; j < main.c; j++) {
-                    System.out.print(main.nodes[i][j][k] + ", ");
+                    System.out.print(main.maze[i][j][k] + ", ");
                 }
                 System.out.print("\n");
             }
@@ -229,6 +301,10 @@ public class Main {
         System.out.println("El nodo de inicio del laberinto es el nodo: " + main.s);
         System.out.println("El nodo de llegada del laberinto es el nodo: " + main.e);
         System.out.println("El número de nodos es: " + main.numNodes);
+
+        main.llenarDigrafo();
+        System.out.println("El digrafo llenado es:\n\n" + main.digrafo.toString());
+
 
 
         /*
