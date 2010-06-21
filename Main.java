@@ -6,7 +6,9 @@ import java.io.IOException;
 import java.io.PrintStream;
 
 /**
- * 
+ * Clase Principal encargada de resolver un laberinto tridimensional, por medio
+ * del uso de DiGraph. Utiliza la representación indicada en la cátedra de
+ * Laboratorio de Algoritmos y Estructuras III, Trimestre Enero-Marzo 2010
  * @author Victor De Ponte, 05-38087
  * @author Karina Valera, 06-40414
  */
