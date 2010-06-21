@@ -6,8 +6,9 @@ import java.io.IOException;
 import java.io.PrintStream;
 
 /**
- *
- * @author victor
+ * 
+ * @author Victor De Ponte, 05-38087
+ * @author Karina Valera, 06-40414
  */
 public class Main {
 
@@ -30,8 +31,8 @@ public class Main {
     int             l;          // No de niveles
     int             r;          // No de filas
     int             c;          // No de columnas
-    int             s;          // Nodo de partida (Start)
-    int             e;          // Nodo de llegada (End)
+    int             start;      // Nodo de partida (Start)
+    int             end;        // Nodo de llegada (End)
     int             numNodes;   // Número de nodos a introducir en el DiGraph.
 
     DiGraph         digrafo;    // Digrafo donde se representará el laberinto.
@@ -51,8 +52,8 @@ public class Main {
         this.l = -1;
         this.r = -1;
         this.c = -1;
-        this.s = -1;
-        this.e = -1;
+        this.start = -1;
+        this.end = -1;
     }
 
     /**
@@ -187,9 +188,9 @@ public class Main {
                         if (tokens[j].matches("[SE.#]")) {
                             if (tokens[j].matches("[SE.]")) {
                                 if (tokens[j].equals("S")) {
-                                    this.s = nNodes;
+                                    this.start = nNodes;
                                 } else if (tokens[j].equals("E")) {
-                                    this.e = nNodes;
+                                    this.end = nNodes;
                                 }
                                 this.maze[i][j - 1][k] = nNodes;
                                 nNodes++;
@@ -307,6 +308,65 @@ public class Main {
     }
 
     /**
+     *
+     * @return
+     */
+    public String bfs() {
+        Queue<Integer> nodos = new Cola();
+        Queue<String> caminos = new Cola();
+        boolean[] visitado = new boolean[this.numNodes];
+        String camino = "";
+
+        for (int i = 0; i < visitado.length; i++) {
+            visitado[i] = false;
+        }
+
+        visitado[this.start] = true;
+
+        camino += "" + this.start;
+
+        nodos.add(new Integer(this.start));
+        caminos.add(camino);
+
+        while (!nodos.isEmpty()) {
+            
+            int v = nodos.poll().intValue();
+            camino = caminos.poll();
+
+            List<Integer> sucesores = this.digrafo.getSucesors(v);
+
+            Object[] suces = sucesores.toArray();
+            int[] suc = new int[suces.length];
+            for (int i = 0; i < suces.length; i++) {
+                suc[i] = ((Integer)suces[i]).intValue();
+            }
+
+            for (int i = 0; i < suc.length; i++) {
+                if (!visitado[suc[i]]) {
+                    if (suc[i] != this.end) {
+                        visitado[suc[i]] = true;
+                        nodos.add(suc[i]);
+                        caminos.add((camino + ","+ suc[i]));
+                    } else {
+                        camino += "," + suc[i];
+                        return camino;
+                    }
+                }
+            }
+        }
+        return "";
+    }
+
+    public void write (String camino) {
+        if (camino.equals("")) {
+            this.out.println("Atrapado!");
+        } else {
+            String[] nodos = camino.split(",");
+            this.out.println("Escape en " + (nodos.length - 1) + " minuto(s).");
+        }
+    }
+
+    /**
      * @param args argumentos introducidos por linea de comandos. Contiene el
      * nombre del archivo de entrada y del archivo de salida
      */
@@ -332,13 +392,24 @@ public class Main {
             System.out.println("\n");
         }
 
-        System.out.println("El nodo de inicio del laberinto es el nodo: " + main.s);
-        System.out.println("El nodo de llegada del laberinto es el nodo: " + main.e);
+        System.out.println("El nodo de inicio del laberinto es el nodo: " + main.start);
+        System.out.println("El nodo de llegada del laberinto es el nodo: " + main.end);
         System.out.println("El número de nodos es: " + main.numNodes);
 
         main.newDiGraph();
         System.out.println("El digrafo llenado es:\n\n" + main.digrafo.toString());
 
+        String camino = main.bfs();
+
+        System.out.println("El camino es: "+ camino);
+
+        String[] nodos = camino.split(",");
+
+        System.out.println("Escape en " + (nodos.length-1) + " minuto(s).");
+
+
+
+        
 
 
         /*
