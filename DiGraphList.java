@@ -531,9 +531,10 @@ public class DiGraphList extends DiGraph {
      */
     public List<Integer> getSucesors(int nodeId) {
         List<Integer> sucesors = new Lista();
-        Arc[] arrArcs = (Arc[])this.outArcs[nodeId].toArray();
+        Object[] arrArcs = this.outArcs[nodeId].toArray();
         for (int k = 0; k < arrArcs.length; k++) {
-            sucesors.add(new Integer(arrArcs[k].getDst()));
+            Arc arco = (Arc)arrArcs[k];
+            sucesors.add(new Integer(arco.getDst()));
         }
         return sucesors;
     }
@@ -860,24 +861,33 @@ public class DiGraphList extends DiGraph {
         String linea = "";
         String[] tokens;
         int k = 2;
+
+        // Se lee la primera linea de la parte correspondiente a los arcos
         try {
             linea = inBuff.readLine();
         } catch (IOException ioe) {
             System.out.println("Esto no deberia pasar, contacte"
                     + " al programador...");
-            System.out.println("MENSAJE:" + ioe.getMessage() + "\n"
-                    + "CAUSA:" + ioe.getCause().toString() + "\n");
             throw new ExcepcionArchivoNoSePuedeLeer("\nProblema Leyendo la"
-                        + "linea " + k + " del archivo \"" + fileName
-                        + "\"");
+                        + "linea " + k + " del archivo \"" + fileName + "\"");
         }
+
+        // Se sigue revisando el archivo hasta que se terminen las líneas
         while (linea != null) {
             tokens = linea.split(" ");
+
+            // Se verifica que sólo tenga 2 elementos en la línea
             if (tokens.length == 2) {
+
+                // Se chequea que sean numeros
                 if (tokens[0].matches("[0-9]+?") &&
                     tokens[1].matches("[0-9]+?")) {
                     int src = (new Integer(tokens[0]).intValue());
                     int dst = (new Integer(tokens[1]).intValue());
+
+                    /* Se chequea que estos números sean nodos que estén en este
+                     * DiGraph
+                     */
                     if ((src < 0 || this.numNodes <= src)) {
                         throw new ExcepcionInconsistenciaNumeroDeNodos("\nEl " +
                                 "grafo de entrada tiene un numero de nodos " +
@@ -893,6 +903,8 @@ public class DiGraphList extends DiGraph {
                                 " la linea " + k + ", y se esperaba en el" +
                                 " intervalo [0 - " + nArc + "]");
                     }
+
+                    // Por último, se agrega el arco leído.
                     this.addArc(src,dst);
                 } else {
                     throw new ExcepcionFormatoIncorrecto("\nEn la linea " + k +
@@ -907,18 +919,24 @@ public class DiGraphList extends DiGraph {
                         " un error de sintaxis:\nSe esperaban dos elementos" +
                         " (src dst), y se encontro:\n\t\"" + linea + "\"\n");
             }
+
+            // Se incrementa un numero de líneas leídas
             k++;
+
+            // Se lee una nueva línea
             try {
                 linea = inBuff.readLine();
             } catch (IOException ioe) {
                 System.out.println("Esto no deberia pasar, contacte"
                         + " al programador...");
-                System.out.println("MENSAJE:" + ioe.getMessage() + "\n"
-                        + "CAUSA:" + ioe.getCause().toString() + "\n");
                 throw new ExcepcionArchivoNoSePuedeLeer("\nProblema Leyendo la"
                         + "linea " + k + " del archivo \"" + fileName + "\"");
             }
         }
+
+        /* Se verifica que el archivo no tenga más líneas que las especificadas
+         * en la primera línea del archivo.
+         */
         if (linea == null && k-2 != nArc) {
             throw new ExcepcionInconsistenciaNumeroDeArcos("El grafo de entra" +
                     "da tiene menos arcos que los indicados al principio del " +
