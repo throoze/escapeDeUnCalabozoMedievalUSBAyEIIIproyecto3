@@ -38,7 +38,9 @@ public class Main {
 
 
     /**
-     *
+     * Construye un nuevo {@code Main} vacío.
+     * <b>Pre</b>: true;
+     * <b>Post</b>: Se creó un nuevo {@code Main} vacío
      */
     public Main() {
         this.inputFile = "";
@@ -54,10 +56,16 @@ public class Main {
     }
 
     /**
-     *
-     * @param inFile
-     * @param outFile
-     * @throws IOException
+     * Construye un nuevo {@code Main}, inicializando los campos en los valores
+     * obtenidos de leer la primera línea de un archivo de entrada, que contiene
+     * la representación de un laerinto según el formato establecido en clase.
+     * <b>Pre</b>: true;
+     * <b>Post</b>: Se construye un nuevo {@code Main}, inicializado con los
+     * valores obtenidos de la primera línea de {@code inFile}.
+     * @param inFile Nombre del archivo de entrada
+     * @param outFile Nombre del archivo de salida
+     * @throws IOException En caso de encontrar un error en el formato del
+     * archivo de entrada
      */
     public Main(String inFile, String outFile) throws IOException {
         this.inputFile = inFile;
@@ -135,9 +143,25 @@ public class Main {
     }
     
     /**
-     *
+     * Se encarga de llenar el campo {@code this.maze}. Esta matriz de tres
+     * dimensiones representará el laberinto sobre el cuál se va a trabajar, de
+     * la siguiente manera: Se recorrerá el archivo y se irán almacenando en
+     * {@code this.maze}, desde {@code this.maze[0][0][0]} hasta
+     * {@code this.maze[this.r-1][this.c-1][this.l-1]} cada espacio en el
+     * laberínto, de modo de que {@code this.maze[i][j][k] == -1} si se
+     * representa un bloque, y {@code this.maze[i][j][k] &gt -1} si se
+     * representa un camino libre. Cada camino libre se enumerará desde el cero
+     * en adelante, y estos números representarán los futuros nodos de nuestro
+     * {@link DiGraph}. Además, este método almacena el número total de nodos,
+     * el nodo en el que se empezará en el laberinto y el nodo de llegada.
+     * <b>Pre</b>: {@code this} debe haber sido inicializado con el constructor
+     * no vacío, de manera de que haya un buffer de lectura abierto al momento
+     * de correr éste método.
+     * <b>Post</b>: Se habrá llenado {@code this.maze} según lo descrito
+     * anteriormente, y se habrán salvado el número total de nodos, el nodo de
+     * partida y el nodo de llegada.
      */
-    public void leerLaberinto() throws IOException{
+    public void readMaze() throws IOException{
         int nLines = (this.l * this.r) + (this.l);
         int lineCounter = 1;
         int nNodes = 0;
@@ -193,10 +217,19 @@ public class Main {
     }
 
     /**
-     *
-     * @return
+     * Se encarga de construir un nuevo {@code DiGraph} para this (el campo
+     * {@code this.digrafo}), basado en la representación obtenida con el método
+     * {@code this.readMaze}. Se crearán arcos en ambos sentidos para todos los
+     * nodos en los que se deben hacer arcos, y todos con costo 1 (Sólo por
+     * abstracción).
+     * <b>Pre</b>;Se debe haber antes aplicado el método {@code this.readMaze},
+     * de manera de que exista una matriz {@code this.maze} llena con la
+     * representación obtenida de leer el archivo {@code this.inputFile}.
+     * <b>Post</b>: Se llenará el digráfo conforme a la representación obtenida
+     * de leer el archivo {@code this.inputFile} a travez del método
+     * {@code this.readMaze}.
      */
-    private void llenarDigrafo() {
+    private void newDiGraph() {
         this.digrafo = new DiGraphMatrix(this.numNodes);
         //this.digrafo = new DiGraphList(this.numNodes);
 
@@ -274,14 +307,15 @@ public class Main {
     }
 
     /**
-     * @param args the command line arguments
+     * @param args argumentos introducidos por linea de comandos. Contiene el
+     * nombre del archivo de entrada y del archivo de salida
      */
     public static void main(String[] args) throws IOException {
 
         Main main = null;
         if (args.length == 2) {
             main = new Main(args[0], args[1]);
-            main.leerLaberinto();
+            main.readMaze();
         } else {
             throw new ExcepcionFormatoIncorrecto("Error de sintaxis en la " +
                     "llamada del programa.\n\nUSO:\n\n\tjava Main " +
@@ -302,7 +336,7 @@ public class Main {
         System.out.println("El nodo de llegada del laberinto es el nodo: " + main.e);
         System.out.println("El número de nodos es: " + main.numNodes);
 
-        main.llenarDigrafo();
+        main.newDiGraph();
         System.out.println("El digrafo llenado es:\n\n" + main.digrafo.toString());
 
 
